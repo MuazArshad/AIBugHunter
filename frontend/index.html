@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Bug Hunting Agent</title>
+  <meta name="description" content="Automated AI-powered bug bounty hunting agent with real-time vulnerability scanning, subdomain enumeration, and multi-AI provider support." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════ HEADER ═══════════════ -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">⬡</span>
+        <span class="logo-text">BugHunter<span class="logo-accent">AI</span></span>
+      </div>
+      <div class="header-status" id="header-status">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">Ready</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════ MAIN LAYOUT ═══════════════ -->
+  <main class="app-layout">
+
+    <!-- ── LEFT PANEL: Configuration ── -->
+    <aside class="panel panel-config" id="panel-config">
+      <div class="panel-header">
+        <span class="panel-icon">⚙</span>
+        <h2 class="panel-title">Scan Configuration</h2>
+      </div>
+
+      <div class="config-form">
+
+        <!-- Authorization Warning -->
+        <div class="auth-warning" id="auth-warning">
+          <div class="warning-icon">⚠</div>
+          <p>Only scan systems you own or have <strong>explicit written authorization</strong> to test. Unauthorized scanning is illegal.</p>
+          <label class="checkbox-label" id="auth-label">
+            <input type="checkbox" id="auth-confirm" />
+            <span class="checkmark"></span>
+            I have authorization to test this target
+          </label>
+        </div>
+
+        <!-- Target -->
+        <div class="form-group">
+          <label class="form-label" for="target-input">
+            <span class="label-icon">🎯</span> Target Domain
+          </label>
+          <input
+            type="text"
+            id="target-input"
+            class="form-input"
+            placeholder="example.com"
+            autocomplete="off"
+          />
+          <span class="form-hint">e.g. example.com or api.example.com</span>
+        </div>
+
+        <!-- Scope -->
+        <div class="form-group">
+          <label class="form-label" for="scope-input">
+            <span class="label-icon">📋</span> Scope (Optional)
+          </label>
+          <textarea
+            id="scope-input"
+            class="form-input form-textarea"
+            placeholder="Paste scope from HackerOne/Bugcrowd&#10;*.example.com&#10;api.example.com&#10;shop.example.com"
+            rows="4"
+          ></textarea>
+          <span class="form-hint">Leave blank to scan all discovered subdomains</span>
+        </div>
+
+        <!-- AI Provider -->
+        <div class="form-group">
+          <label class="form-label">
+            <span class="label-icon">🤖</span> AI Provider
+          </label>
+          <div class="provider-grid" id="provider-grid">
+            <button class="provider-btn active" data-provider="gemini" id="btn-gemini">
+              <img src="https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304ff6292a690345.svg" alt="" class="provider-logo" onerror="this.style.display='none'" />
+              <span>Gemini</span>
+              <span class="provider-badge" id="badge-gemini">●</span>
+            </button>
+            <button class="provider-btn" data-provider="claude" id="btn-claude">
+              <span class="provider-emoji">🔮</span>
+              <span>Claude</span>
+              <span class="provider-badge" id="badge-claude">●</span>
+            </button>
+            <button class="provider-btn" data-provider="grok" id="btn-grok">
+              <span class="provider-emoji">✦</span>
+              <span>Grok</span>
+              <span class="provider-badge" id="badge-grok">●</span>
+            </button>
+            <button class="provider-btn" data-provider="openai" id="btn-openai">
+              <span class="provider-emoji">◈</span>
+              <span>GPT-4o</span>
+              <span class="provider-badge" id="badge-openai">●</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Recon Mode -->
+        <div class="form-group">
+          <label class="form-label">
+            <span class="label-icon">🛰</span> Recon Mode
+          </label>
+          <div class="toggle-group">
+            <button class="toggle-btn active" data-mode="passive" id="mode-passive">Passive</button>
+            <button class="toggle-btn" data-mode="active" id="mode-active">Active</button>
+            <button class="toggle-btn" data-mode="both" id="mode-both">Both</button>
+          </div>
+          <span class="form-hint">Passive = crt.sh + HackerTarget only; Active = DNS brute-force</span>
+        </div>
+
+        <!-- Scanners -->
+        <div class="form-group">
+          <label class="form-label">
+            <span class="label-icon">🔬</span> Scanners
+          </label>
+          <div class="scanner-list" id="scanner-list">
+            <label class="scanner-check">
+              <input type="checkbox" id="sc-headers" value="headers" checked />
+              <span class="check-icon">🛡</span>
+              <span class="check-label">Security Headers</span>
+              <span class="check-severity low">LOW</span>
+            </label>
+            <label class="scanner-check">
+              <input type="checkbox" id="sc-cors" value="cors" checked />
+              <span class="check-icon">🌐</span>
+              <span class="check-label">CORS</span>
+              <span class="check-severity medium">MED</span>
+            </label>
+            <label class="scanner-check">
+              <input type="checkbox" id="sc-open_redirect" value="open_redirect" checked />
+              <span class="check-icon">↗</span>
+              <span class="check-label">Open Redirect</span>
+              <span class="check-severity medium">MED</span>
+            </label>
+            <label class="scanner-check">
+              <input type="checkbox" id="sc-xss" value="xss" checked />
+              <span class="check-icon">⚡</span>
+              <span class="check-label">Reflected XSS</span>
+              <span class="check-severity high">HIGH</span>
+            </label>
+            <label class="scanner-check">
+              <input type="checkbox" id="sc-info_disclosure" value="info_disclosure" checked />
+              <span class="check-icon">📂</span>
+              <span class="check-label">Info Disclosure</span>
+              <span class="check-severity high">HIGH</span>
+            </label>
+            <label class="scanner-check">
+              <input type="checkbox" id="sc-subdomain_takeover" value="subdomain_takeover" checked />
+              <span class="check-icon">🏴</span>
+              <span class="check-label">Subdomain Takeover</span>
+              <span class="check-severity high">HIGH</span>
+            </label>
+            <label class="scanner-check">
+              <input type="checkbox" id="sc-sqli" value="sqli" checked />
+              <span class="check-icon">💉</span>
+              <span class="check-label">SQL Injection</span>
+              <span class="check-severity high">HIGH</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <button class="btn-primary" id="btn-start" disabled>
+            <span class="btn-icon">▶</span> Start Scan
+          </button>
+          <button class="btn-secondary" id="btn-stop" disabled>
+            <span class="btn-icon">■</span> Stop
+          </button>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- ── CENTER PANEL: Live Feed ── -->
+    <section class="panel panel-feed" id="panel-feed">
+      <div class="panel-header">
+        <span class="panel-icon">📡</span>
+        <h2 class="panel-title">Live Scan Feed</h2>
+        <div class="panel-actions">
+          <span class="finding-counter" id="finding-counter">0 findings</span>
+          <button class="icon-btn" id="btn-clear-log" title="Clear log">✕</button>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-container" id="progress-container">
+        <div class="progress-track">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <span class="progress-label" id="progress-label">Waiting...</span>
+      </div>
+
+      <!-- Phase Indicators -->
+      <div class="phase-track" id="phase-track">
+        <div class="phase-step" id="phase-init">
+          <span class="phase-dot"></span><span>Init</span>
+        </div>
+        <div class="phase-step" id="phase-recon">
+          <span class="phase-dot"></span><span>Recon</span>
+        </div>
+        <div class="phase-step" id="phase-probing">
+          <span class="phase-dot"></span><span>Probe</span>
+        </div>
+        <div class="phase-step" id="phase-scanning">
+          <span class="phase-dot"></span><span>Scan</span>
+        </div>
+        <div class="phase-step" id="phase-ai_triage">
+          <span class="phase-dot"></span><span>AI</span>
+        </div>
+        <div class="phase-step" id="phase-done">
+          <span class="phase-dot"></span><span>Done</span>
+        </div>
+      </div>
+
+      <!-- Subdomain Summary -->
+      <div class="recon-summary" id="recon-summary" style="display:none">
+        <div class="recon-stat">
+          <span class="stat-value" id="stat-subdomains">0</span>
+          <span class="stat-label">Subdomains</span>
+        </div>
+        <div class="recon-stat">
+          <span class="stat-value" id="stat-live">0</span>
+          <span class="stat-label">Live Hosts</span>
+        </div>
+        <div class="recon-stat">
+          <span class="stat-value" id="stat-cnames">0</span>
+          <span class="stat-label">Dangling CNAMEs</span>
+        </div>
+      </div>
+
+      <!-- Terminal Log -->
+      <div class="terminal" id="terminal">
+        <div class="terminal-header">
+          <span class="terminal-dot red"></span>
+          <span class="terminal-dot yellow"></span>
+          <span class="terminal-dot green"></span>
+          <span class="terminal-title">agent.log</span>
+        </div>
+        <div class="terminal-body" id="terminal-body">
+          <p class="terminal-welcome">
+            <span class="t-cyan">BugHunterAI</span> v1.0.0 — Configure and launch a scan to begin.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── RIGHT PANEL: Findings Report ── -->
+    <section class="panel panel-report" id="panel-report">
+      <div class="panel-header">
+        <span class="panel-icon">📊</span>
+        <h2 class="panel-title">Findings Report</h2>
+        <div class="panel-actions">
+          <button class="icon-btn" id="btn-export-md" title="Export Markdown" disabled>⬇ MD</button>
+          <button class="icon-btn" id="btn-export-json" title="Export JSON" disabled>⬇ JSON</button>
+        </div>
+      </div>
+
+      <!-- Severity Summary Bar -->
+      <div class="severity-bar" id="severity-bar">
+        <div class="sev-item" id="sev-critical">
+          <span class="sev-count" id="cnt-critical">0</span>
+          <span class="sev-label critical">CRITICAL</span>
+        </div>
+        <div class="sev-item" id="sev-high">
+          <span class="sev-count" id="cnt-high">0</span>
+          <span class="sev-label high">HIGH</span>
+        </div>
+        <div class="sev-item" id="sev-medium">
+          <span class="sev-count" id="cnt-medium">0</span>
+          <span class="sev-label medium">MEDIUM</span>
+        </div>
+        <div class="sev-item" id="sev-low">
+          <span class="sev-count" id="cnt-low">0</span>
+          <span class="sev-label low">LOW</span>
+        </div>
+        <div class="sev-item" id="sev-info">
+          <span class="sev-count" id="cnt-info">0</span>
+          <span class="sev-label info">INFO</span>
+        </div>
+      </div>
+
+      <!-- Findings List -->
+      <div class="findings-list" id="findings-list">
+        <div class="findings-empty" id="findings-empty">
+          <div class="empty-icon">🛡</div>
+          <p>No findings yet</p>
+          <p class="empty-sub">Start a scan to discover vulnerabilities</p>
+        </div>
+      </div>
+
+      <!-- AI Summary -->
+      <div class="ai-summary-box" id="ai-summary-box" style="display:none">
+        <div class="ai-summary-header">
+          <span class="ai-icon">🤖</span>
+          <span>AI Executive Summary</span>
+        </div>
+        <div class="ai-summary-content" id="ai-summary-content"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── FINDING DETAIL MODAL ── -->
+  <div class="modal-overlay" id="modal-overlay" style="display:none">
+    <div class="modal" id="finding-modal">
+      <div class="modal-header">
+        <div>
+          <span class="modal-severity" id="modal-severity-badge"></span>
+          <h3 class="modal-title" id="modal-title"></h3>
+        </div>
+        <button class="modal-close" id="modal-close">✕</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+  <script src="/static/js/scanner.js"></script>
+  <script src="/static/js/report.js"></script>
+</body>
+</html>
