@@ -48,9 +48,8 @@ async def get_providers():
     import os
     providers = [
         {"id": "gemini",  "name": "Google Gemini",  "configured": bool(os.getenv("GEMINI_API_KEY"))},
-        {"id": "claude",  "name": "Anthropic Claude","configured": bool(os.getenv("CLAUDE_API_KEY"))},
-        {"id": "grok",    "name": "xAI Grok",        "configured": bool(os.getenv("GROK_API_KEY"))},
-        {"id": "openai",  "name": "OpenAI GPT",      "configured": bool(os.getenv("OPENAI_API_KEY"))},
+        {"id": "groq",    "name": "Groq",            "configured": bool(os.getenv("GROQ_API_KEY") or os.getenv("GROK_API_KEY"))},
+        {"id": "grok",    "name": "xAI Grok",        "configured": bool(os.getenv("GROK_API_KEY") or os.getenv("GROQ_API_KEY"))},
     ]
     return {"providers": providers}
 

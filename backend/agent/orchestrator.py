@@ -24,9 +24,8 @@ from agent.scanners.sqli_scanner import SQLiScanner
 
 # AI provider registry
 from agent.ai_providers.gemini import GeminiProvider
-from agent.ai_providers.claude import ClaudeProvider
 from agent.ai_providers.grok import GrokProvider
-from agent.ai_providers.openai_provider import OpenAIProvider
+from agent.ai_providers.groq import GroqProvider
 
 SCANNER_MAP = {
     "headers": HeaderScanner,
@@ -40,9 +39,8 @@ SCANNER_MAP = {
 
 PROVIDER_MAP = {
     "gemini": GeminiProvider,
-    "claude": ClaudeProvider,
+    "groq": GroqProvider,
     "grok": GrokProvider,
-    "openai": OpenAIProvider,
 }
 
 

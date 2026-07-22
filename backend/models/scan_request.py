@@ -28,7 +28,7 @@ class ScanRequest(BaseModel):
     @field_validator("provider")
     @classmethod
     def validate_provider(cls, v: str) -> str:
-        allowed = {"gemini", "claude", "grok", "openai"}
+        allowed = {"gemini", "groq", "grok"}
         if v not in allowed:
             raise ValueError(f"Provider must be one of {allowed}")
         return v
