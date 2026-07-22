@@ -12,8 +12,10 @@ const Scanner = (() => {
   async function connect(scanId, payload) {
     reset();
 
-    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-    const wsUrl = `${proto}://${location.host}/ws/scan/${scanId}`;
+    const apiBase = (window.API_BASE_URL || localStorage.getItem('API_BASE_URL') || window.location.origin).replace(/\/$/, '');
+    const proto = apiBase.startsWith('https') ? 'wss' : 'ws';
+    const host = apiBase.replace(/^https?:\/\//, '');
+    const wsUrl = `${proto}://${host}/ws/scan/${scanId}`;
 
     ws = new WebSocket(wsUrl);
 

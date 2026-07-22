@@ -34,10 +34,14 @@ const App = (() => {
     await loadProviderStatus();
   }
 
+  function getApiBaseUrl() {
+    return (window.API_BASE_URL || localStorage.getItem('API_BASE_URL') || window.location.origin).replace(/\/$/, '');
+  }
+
   // ── Load Provider Status ──────────────────────────────────────────────────
   async function loadProviderStatus() {
     try {
-      const res = await fetch('/api/providers');
+      const res = await fetch(`${getApiBaseUrl()}/api/providers`);
       const data = await res.json();
       state.providers = data.providers;
       data.providers.forEach(p => {
@@ -108,7 +112,7 @@ const App = (() => {
 
     // Create session on backend
     try {
-      const res = await fetch('/api/scan/start', {
+      const res = await fetch(`${getApiBaseUrl()}/api/scan/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ target, provider: state.selectedProvider }),
@@ -143,7 +147,7 @@ const App = (() => {
   async function stopScan() {
     if (!state.scanId) return;
     try {
-      await fetch(`/api/scan/${state.scanId}/stop`, { method: 'POST' });
+      await fetch(`${getApiBaseUrl()}/api/scan/${state.scanId}/stop`, { method: 'POST' });
     } catch (e) { /* ignore */ }
     Scanner.disconnect();
     onScanEnd();
